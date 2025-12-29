@@ -1,6 +1,8 @@
 import plotter
 plotter.parce('noise.txt')
-plotter.plot_2d_time('noise','EMF.xlsx','noise')
-plotter.get_offset_std('noise','EMF.xlsx')
+plotter.unoffset('noise','EMF.xlsx')
+plotter.plot_2d_time('noise','unoffset.xlsx','noise')
+
 plotter.parce('real..txt')
-plotter.plot_2d_time('real','EMF.xlsx','real')
+plotter.unoffset('real','EMF.xlsx')
+plotter.plot_2d_time('real','unoffset.xlsx','real')

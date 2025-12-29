@@ -2,6 +2,9 @@ import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib
+
+matplotlib.rcParams['agg.path.chunksize'] = 10000
 
 def parce(filename,save = 'EMF'):
     delay = 1
@@ -33,7 +36,18 @@ def get_offset_std(foldername,filename,save='noise'):
     print(np.mean(voltage_arr))
     print(np.std(voltage_arr))
     
-
+def unoffset(foldername,filename,save='unoffset'):
+    df = pd.read_excel(os.path.join('storage',foldername,filename),engine='openpyxl',header=0)
+    voltage = df.voltage
+    time = df.Time.to_numpy()
+    voltage_arr = voltage.to_numpy()
+    unoffset_voltage = voltage_arr - 505.55085039916696
+    df2 = pd.DataFrame({
+        'Time': time,
+        'voltage': unoffset_voltage
+    })
+    df2.to_excel(os.path.join('storage',foldername,f'{save}.xlsx'))
+    
 
 def plot_2d_time(foldername,filename,save='EMF'):
     df = pd.read_excel(os.path.join('storage',foldername,filename), engine='openpyxl', header=0)
