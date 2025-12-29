@@ -1,17 +1,16 @@
 import os
 import pandas as pd
-import openpyxl
-import numpyp as np
+import numpy as np
+import matplotlib.pyplot as plt
 
-def parce(name,height):
-    delay = 10
+def parce(filename,save = 'EMF'):
+    delay = 1
     global results
     timelines = []
     voltage_list = []
-    constant_list = []
-    dat = os.path.join(name)
+    dat = os.path.join('storage',filename)
     linenum = 0
-    with open(dat, "r")as f:
+    with open(dat, "r", encoding='utf-8')as f:
         for line in f:
             linenum+=delay
             timeline = linenum
@@ -22,17 +21,27 @@ def parce(name,height):
         "Time": timelines,
         "voltage":voltage_list
     })
+    name = filename.split('.')[0]
+    if os.path.isdir(os.path.join('storage',name)): pass
+    else: os.makedirs(os.path.join('storage',name))
+    df.to_excel(os.path.join('storage',name,f"{save}.xlsx"), index=False)
 
-    df.to_excel(os.path.join('storage',f"EMF {height}cm.xlsx"), index=False)
+def get_offset_std(foldername,filename,save='noise'):
+    df = pd.read_excel(os.path.join('storage',foldername,filename), engine='openpyxl', header=0)
+    voltage = df.voltage
+    voltage_arr = voltage.to_numpy()
+    print(np.mean(voltage_arr))
+    print(np.std(voltage_arr))
+    
 
-def plot_2d_time(name):
 
-    with open(os.path.join('storage',name), "r") as f:
-        for line in f:
+def plot_2d_time(foldername,filename,save='EMF'):
+    df = pd.read_excel(os.path.join('storage',foldername,filename), engine='openpyxl', header=0)
+    timelines = df.Time
+    voltage = df.voltage
+    plt.plot(timelines, voltage, label = "Electromotive Force", color = (0.0, 0.0, 1.0, 1.0), linestyle="-", marker="")
 
-    plt.plot(timelines_arr, voltage_arr, label = "Electromotive Force", color = (0.0, 0.0, 1.0, 1.0), linestyle="-", marker="")
-
-    plt.title(f"Induced Electromotive Force [height: {height}cm]")
+    plt.title(f"Induced Electromotive Force")
     plt.xticks([])
     plt.grid(axis='x', visible=False)
     plt.xlabel("Time                 [   ms  ]")
@@ -45,8 +54,5 @@ def plot_2d_time(name):
         facecolor = "white",
         )
 
-    plt.savefig(f"EMF in {height}cm.jpg", dpi=300, bbox_inches='tight')
-    timelines.clear()
-    lift_list.clear()
-    drag_list.clear()
+    plt.savefig(f"{save}_Graph.jpg", dpi=3000, bbox_inches='tight')
     plt.close()
