@@ -17,9 +17,9 @@ def ma(df, num = 4):
     return pd.DataFrame({'Time':time,'voltage':voltage})
 
 def zoom(df, milisec = 4):
-    max = df['voltage'].idxmax()
-    voltage = df['voltage'].iloc[max(0,max-1000*milisec):min(len(df['voltage']), max+1000*milisec)]
-    time = df['Time'].iloc[max(0,max-1000*milisec):min(len(df['Time']), max+1000*milisec)]
+    maxVal = df['voltage'].idxmax()
+    voltage = df['voltage'].iloc[max(0,maxVal-1000*milisec):min(len(df['voltage']), maxVal+1000*milisec)]
+    time = df['Time'].iloc[max(0,maxVal-1000*milisec):min(len(df['Time']), maxVal+1000*milisec)]
     return pd.DataFrame({'Time':time,'voltage':voltage})
 def unoffset(df, offset = 505.55085039916696):
     voltage = df['voltage'] - offset
@@ -63,14 +63,19 @@ def plot(df, path):
 
 # parce all data
 
-def st(filename):return os.path.join('storage',f'{filename}.txt')
+def st(filename):return os.path.join('storage','__Rawdata__',f'{filename}.txt')
 
-dirsc.bsdtfile('EMF',[st('noise','raw_second')])
+dirsc.bsdtfile('EMF')
+
+datalst = []
+
 class data: 
     def __init__(self,name):
         self.path = st(name)
         self.name = name
         self.folder = os.path.join('storage',self.name)
+        datalst.append(self)
+
     def make(self):
         os.makedirs(os.path.join('storage',self.name))
         with open(self.path,'r') as f:
@@ -95,6 +100,7 @@ class data:
                 if line.strip() in funcs: self.tasklist.append(funcs[line.strip()])
                 else: continue
     def process(self):
+        self.getTask()
         df = pd.read_excel(os.path.join(self.folder, 'EMF.xlsx'), header = 0, engine = 'openpyxl') 
         for function in self.tasklist:
             df = function(df)
@@ -102,4 +108,7 @@ class data:
         plot(df, self.folder)
 
 
-
+def launch:
+    for i in BSDT.target:
+        name = i.split('/')[-1]
+        i = nplot.data(name)
