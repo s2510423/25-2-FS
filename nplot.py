@@ -9,21 +9,27 @@ from BSDT import dirscanner as dirsc
 def slicer(df, num = 4):
     voltage = df['voltage'].to_numpy()[::num]
     time = df['Time'].to_numpy()[::num]
+    print(f"[Complete] task 'slicer'")
     return pd.DataFrame({'Time':time,'voltage':voltage})
 
 def ma(df, num = 4):
     voltage = df['voltage'].rolling(window = num).mean()
     time = df['Time']
+    print(f"[Complete] task 'ma'")
     return pd.DataFrame({'Time':time,'voltage':voltage})
 
 def zoom(df, milisec = 4):
     maxVal = df['voltage'].idxmax()
     voltage = df['voltage'].iloc[max(0,maxVal-1000*milisec):min(len(df['voltage']), maxVal+1000*milisec)]
     time = df['Time'].iloc[max(0,maxVal-1000*milisec):min(len(df['Time']), maxVal+1000*milisec)]
+    print(f"[Complete] task 'zoom': with max Value {voltage[maxVal]}")
     return pd.DataFrame({'Time':time,'voltage':voltage})
+
 def unoffset(df, offset = 505.55085039916696):
-    voltage = df['voltage'] - offset
+    voltage = df['voltage'] - offset / 1023 * 5
+    print(f"[Complete] task 'unoffset'")
     return pd.DataFrame({'Time':df['Time'],'voltage':voltage})
+
 funcs = {
     'ma'        :   ma,
     'zoom'      :   zoom,
@@ -59,11 +65,13 @@ def plot(df, path):
 
     plt.savefig(os.path.join(path,"Graph.jpg"), dpi=1000, bbox_inches='tight')
     plt.close()
-
+    print(f"[Complete] task 'plot'")
 
 # parce all data
 
-def st(filename):return os.path.join('storage','__Rawdata__',f'{filename}.txt')
+def st(filename):
+    if filename.endswith('.txt'):return os.path.join('storage','__RawData__',filename)
+    else:return os.path.join('storage','__RawData__',f'{filename}.txt')
 
 dirsc.bsdtfile('EMF')
 
@@ -77,7 +85,8 @@ class data:
         datalst.append(self)
 
     def make(self):
-        os.makedirs(os.path.join('storage',self.name))
+        try: os.makedirs(os.path.join('storage','__RawData__',self.name))
+        except: pass
         with open(self.path,'r') as f:
             time = 0
             timelines = []
@@ -86,12 +95,14 @@ class data:
             for line in lines:
                 time += 1
                 timelines.append(time)
-                voltage.append(float(line.strip()) * 1023 / 5)
+                voltage.append(float(line.strip()) / 1023 * 5)
         df = pd.DataFrame({
             'Time':timelines,
             'voltage':voltage
         })
         df.to_excel(os.path.join(self.folder,'EMF.xlsx'), index=False)
+        print(f"[Complete] task 'make' on '{self.name}'")
+
     def getTask(self):
         with open (os.path.join(self.folder,'control.bsdt'), 'r') as f:
             self.tasklist = []
@@ -99,6 +110,7 @@ class data:
             for line in lines:
                 if line.strip() in funcs: self.tasklist.append(funcs[line.strip()])
                 else: continue
+        print(f"[Complete] task 'getTask' on '{self.name}'")
     def process(self):
         self.getTask()
         df = pd.read_excel(os.path.join(self.folder, 'EMF.xlsx'), header = 0, engine = 'openpyxl') 
@@ -106,9 +118,3 @@ class data:
             df = function(df)
         df.to_excel(os.path.join(self.folder, 'result.xlsx'), index = False)
         plot(df, self.folder)
-
-
-def launch:
-    for i in BSDT.target:
-        name = i.split('/')[-1]
-        i = nplot.data(name)
